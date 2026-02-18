@@ -12,11 +12,27 @@ const PREDS  = SEQUENCE.slice(1);
 const N = TOKENS.length;
 const L = 4;
 
-const COL = {
+const DARK_PAL = {
   cyan: '#00d4ff', amber: '#ffb020', green: '#40ff90',
   magenta: '#ff3080', red: '#ff4060', white: '#e2e8f0',
-  dim: '#4a5568', bg: '#000000',
+  dim: '#4a5568', bg: '#000000', nodeFill: '#050a18',
+  gridDot: 'rgba(0,200,255,0.03)',
 };
+
+const LIGHT_PAL = {
+  cyan: '#0077aa', amber: '#b87800', green: '#1a8a4a',
+  magenta: '#cc2060', red: '#cc3040', white: '#1a2030',
+  dim: '#94a3b8', bg: '#f5f5f0', nodeFill: '#fafaf5',
+  gridDot: 'rgba(0,100,140,0.06)',
+};
+
+const COL = { ...DARK_PAL };
+let isLight = false;
+
+function syncTheme() {
+  isLight = document.documentElement.dataset.theme === 'light';
+  Object.assign(COL, isLight ? LIGHT_PAL : DARK_PAL);
+}
 
 // ── Utilities ──
 
@@ -45,10 +61,11 @@ function pop(t, activation, riseMs, fallMs) {
 // ── Drawing primitives ──
 
 function drawBg(ctx, W, H) {
+  syncTheme();
   ctx.fillStyle = COL.bg;
   ctx.fillRect(0, 0, W, H);
   const sp = 28;
-  ctx.fillStyle = 'rgba(0,200,255,0.03)';
+  ctx.fillStyle = COL.gridDot;
   for (let x = sp; x < W; x += sp)
     for (let y = sp; y < H; y += sp)
       ctx.fillRect(x - 0.5, y - 0.5, 1, 1);
@@ -57,12 +74,13 @@ function drawBg(ctx, W, H) {
 function glowRect(ctx, x, y, w, h, color, intensity) {
   if (intensity <= 0) return;
   ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.fillStyle = rgba(color, intensity * 0.05);
+  ctx.globalCompositeOperation = isLight ? 'source-over' : 'lighter';
+  const m = isLight ? 3 : 1;
+  ctx.fillStyle = rgba(color, intensity * 0.05 * m);
   ctx.fillRect(x - 12, y - 12, w + 24, h + 24);
-  ctx.fillStyle = rgba(color, intensity * 0.12);
+  ctx.fillStyle = rgba(color, intensity * 0.12 * m);
   ctx.fillRect(x - 6, y - 6, w + 12, h + 12);
-  ctx.fillStyle = rgba(color, intensity * 0.2);
+  ctx.fillStyle = rgba(color, intensity * 0.2 * m);
   ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
   ctx.restore();
 }
@@ -70,16 +88,17 @@ function glowRect(ctx, x, y, w, h, color, intensity) {
 function glowLine(ctx, x1, y1, x2, y2, color, intensity, w) {
   if (intensity <= 0) return;
   ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalCompositeOperation = isLight ? 'source-over' : 'lighter';
+  const m = isLight ? 2.5 : 1;
   ctx.lineCap = 'butt';
-  ctx.strokeStyle = rgba(color, intensity * 0.06);
+  ctx.strokeStyle = rgba(color, intensity * 0.06 * m);
   ctx.lineWidth = w + 6;
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-  ctx.strokeStyle = rgba(color, intensity * 0.14);
+  ctx.strokeStyle = rgba(color, intensity * 0.14 * m);
   ctx.lineWidth = w + 2;
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
   ctx.restore();
-  ctx.strokeStyle = rgba(color, intensity);
+  ctx.strokeStyle = rgba(color, intensity * (isLight ? 1.4 : 1));
   ctx.lineWidth = w;
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
 }
@@ -104,7 +123,7 @@ function drawLayerNode(ctx, cx, cy, sz, label, a, glow, color) {
   color = color || COL.cyan;
   const x = cx - sz/2, y = cy - sz/2;
   if (glow > 0) glowRect(ctx, x, y, sz, sz, color, a * (0.6 + glow * 0.6));
-  ctx.fillStyle = rgba('#050a18', a * 0.95);
+  ctx.fillStyle = rgba(COL.nodeFill, a * 0.95);
   rRect(ctx, x, y, sz, sz, 3); ctx.fill();
   ctx.strokeStyle = rgba(color, a * (0.5 + glow * 0.5));
   ctx.lineWidth = 1.5 + glow;
@@ -118,7 +137,7 @@ function drawLayerNode(ctx, cx, cy, sz, label, a, glow, color) {
 function drawActNode(ctx, cx, cy, sz, color, a, glow) {
   const x = cx - sz/2, y = cy - sz/2;
   if (glow > 0) glowRect(ctx, x, y, sz, sz, color, a * glow * 0.8);
-  ctx.fillStyle = rgba('#050a18', a * 0.9);
+  ctx.fillStyle = rgba(COL.nodeFill, a * 0.9);
   rRect(ctx, x, y, sz, sz, 2); ctx.fill();
   ctx.strokeStyle = rgba(color, a * (0.4 + glow * 0.5));
   ctx.lineWidth = 1 + glow * 0.5;
@@ -132,7 +151,7 @@ function drawTokenPill(ctx, cx, cy, text, fontSize, a, glow, color) {
   const th = fontSize * 1.6;
   const x = cx - tw/2, y = cy - th/2;
   if (glow > 0) glowRect(ctx, x, y, tw, th, color, a * glow * 0.5);
-  ctx.fillStyle = rgba('#050a18', a * 0.8);
+  ctx.fillStyle = rgba(COL.nodeFill, a * 0.8);
   rRect(ctx, x, y, tw, th, th/2); ctx.fill();
   ctx.strokeStyle = rgba(color, a * (0.3 + glow * 0.4));
   ctx.lineWidth = 1;
@@ -764,8 +783,9 @@ function drawSec4(ctx, W, H, t) {
 
     // Red glow zone around prediction area
     ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = rgba(COL.red, la * (0.04 + lossGlow * 0.08));
+    ctx.globalCompositeOperation = isLight ? 'source-over' : 'lighter';
+    const lm = isLight ? 3 : 1;
+    ctx.fillStyle = rgba(COL.red, la * (0.04 + lossGlow * 0.08) * lm);
     ctx.fillRect(lcx - 40*s, predY - 22, 80*s, 36);
     ctx.restore();
 
@@ -887,7 +907,24 @@ function drawSec4(ctx, W, H, t) {
 
 // ── Init ──
 
+function initTheme() {
+  const saved = localStorage.getItem('llm-backprop-theme');
+  const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  const theme = saved || (prefersLight ? 'light' : 'dark');
+  document.documentElement.dataset.theme = theme;
+
+  const btn = document.getElementById('theme-toggle');
+  btn.textContent = theme === 'light' ? 'dark' : 'light';
+  btn.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    btn.textContent = next === 'light' ? 'dark' : 'light';
+    localStorage.setItem('llm-backprop-theme', next);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   const SEC1_CYCLE = 2.0, SEC2_CYCLE = 2.0, SEC3_CYCLE = 2.4;
   const sec4GradStart = 0.8, sec4WaveSpeed = 0.55;
   createSection(document.getElementById('sec1'), drawSec1, (N + 1) * SEC1_CYCLE);
