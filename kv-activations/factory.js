@@ -1,10 +1,16 @@
 // KV Activations in Transformers — Interactive Diagrams
 // 4 sections: autoregressive, unrolled, KV cache, backprop
 
-const TOKENS = ['The', 'cat', 'sat', 'on', 'the'];
-const PREDS  = ['cat', 'sat', 'on', 'the', 'mat'];
-const FULL_CHAIN = ['The', 'cat', 'sat', 'on', 'the', 'mat'];
-const N = 5, L = 4;
+// ── Configurable token sequence ──
+// Change this array to visualize any autoregressive chain.
+// SEQUENCE[0] is the prompt; each subsequent token is what the model predicts.
+const SEQUENCE = ['The', 'cat', 'sat', 'on', 'the', 'mat'];
+
+const FULL_CHAIN = SEQUENCE;
+const TOKENS = SEQUENCE.slice(0, -1);
+const PREDS  = SEQUENCE.slice(1);
+const N = TOKENS.length;
+const L = 4;
 
 const COL = {
   cyan: '#00d4ff', amber: '#ffb020', green: '#40ff90',
@@ -78,6 +84,13 @@ function glowLine(ctx, x1, y1, x2, y2, color, intensity, w) {
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
 }
 
+// Directional glow: draws from (x1,y1) toward (x2,y2), clipped at `progress` (0..1)
+function glowLineDir(ctx, x1, y1, x2, y2, color, intensity, w, progress) {
+  if (intensity <= 0 || progress <= 0) return;
+  const p = Math.min(progress, 1);
+  glowLine(ctx, x1, y1, lerp(x1, x2, p), lerp(y1, y2, p), color, intensity, w);
+}
+
 function rRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y);
@@ -136,13 +149,14 @@ function drawPredBar(ctx, cx, cy, text, a, glow) {
   const maxH = 14;
   const tw = nb * bw + (nb-1) * bg;
   const sx = cx - tw/2;
+  if (glow > 0) glowRect(ctx, sx - 4, cy - maxH - 2, tw + 8, maxH + 20, COL.cyan, a * glow * 0.25);
   for (let i = 0; i < nb; i++) {
     const bh = heights[i] * maxH;
-    ctx.fillStyle = rgba(COL.cyan, a * (i === 0 ? 0.6 + glow * 0.3 : 0.12));
+    ctx.fillStyle = rgba(COL.cyan, a * (i === 0 ? 0.7 + glow * 0.3 : 0.15));
     ctx.fillRect(sx + i*(bw+bg), cy - bh, bw, bh);
   }
-  ctx.fillStyle = rgba(COL.dim, a * 0.7);
-  ctx.font = `${10}px 'IBM Plex Mono', monospace`;
+  ctx.fillStyle = rgba(COL.white, a * 0.85);
+  ctx.font = `500 ${10}px 'IBM Plex Mono', monospace`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.fillText('"' + text + '"', cx, cy + 3);
 }
@@ -241,19 +255,34 @@ function drawSec1(ctx, W, H, t) {
     drawX += pillWidths[i] + pillGap;
   }
 
-  // Vertical model connections (from embY down through layers to predY)
-  const connA = 0.18;
+  // Vertical model connections (dim base + directional pulse)
+  const fwdStart = 0.20;
+  const connA = 0.12;
   glowLine(ctx, cx, embY + embSz, cx, lY[0] - lSz/2, COL.cyan, connA, 1.5);
   for (let l = 0; l < L-1; l++)
     glowLine(ctx, cx, lY[l] + lSz/2, cx, lY[l+1] - lSz/2, COL.cyan, connA, 1.5);
   glowLine(ctx, cx, lY[L-1] + lSz/2, cx, predY - 10*s, COL.cyan, connA, 1.5);
+
+  if (cycle < N) {
+    const segDur = 0.06;
+    const segS0 = fwdStart;
+    glowLineDir(ctx, cx, embY + embSz, cx, lY[0] - lSz/2, COL.cyan,
+      pop(ct, segS0, 0.03, 0.12) * 0.5, 2.5, clamp((ct - segS0) / segDur, 0, 1));
+    for (let l = 0; l < L - 1; l++) {
+      const segS = fwdStart + (l + 1) * 0.08;
+      glowLineDir(ctx, cx, lY[l] + lSz/2, cx, lY[l+1] - lSz/2, COL.cyan,
+        pop(ct, segS, 0.03, 0.12) * 0.5, 2.5, clamp((ct - segS) / segDur, 0, 1));
+    }
+    const segSL = fwdStart + L * 0.08;
+    glowLineDir(ctx, cx, lY[L-1] + lSz/2, cx, predY - 10*s, COL.cyan,
+      pop(ct, segSL, 0.03, 0.12) * 0.5, 2.5, clamp((ct - segSL) / segDur, 0, 1));
+  }
 
   // Residual nodes between layers (below embedding convergence)
   const resPositions = [
     ...Array.from({length: L-1}, (_, l) => (lY[l] + lSz/2 + lY[l+1] - lSz/2) / 2),
     (lY[L-1] + lSz/2 + predY - 10*s) / 2,
   ];
-  const fwdStart = 0.20;
   for (let r = 0; r < resPositions.length; r++) {
     const rAct = (cycle < N) ? fwdStart + (r + 2) * 0.07 : -1;
     const rGlow = pop(ct, rAct);
@@ -325,7 +354,7 @@ function drawSec2(ctx, W, H, t) {
   drawBg(ctx, W, H);
   const s = W / 1100;
   const lSz = Math.round(28 * s);
-  const colSp = Math.round(170 * s);
+  const colSp = Math.round(Math.min(170, 850 / Math.max(N - 1, 1)) * s);
   const totalW = (N - 1) * colSp;
   const leftPad = (W - totalW) / 2;
   const colX = Array.from({length: N}, (_, i) => leftPad + i * colSp);
@@ -338,20 +367,35 @@ function drawSec2(ctx, W, H, t) {
   const embSz = Math.round(5 * s);
 
   const CYCLE = 2.0;
-  const cycle = Math.min(Math.floor(t / CYCLE), N - 1);
-  const ct = clamp((t - cycle * CYCLE) / CYCLE, 0, 1);
+  const cycle = Math.min(Math.floor(t / CYCLE), N);
+  const drawCycle = Math.min(cycle, N - 1);
+  const ct = cycle < N ? clamp((t - cycle * CYCLE) / CYCLE, 0, 1) : 1;
 
-  for (let pos = 0; pos <= cycle; pos++) {
+  for (let pos = 0; pos <= drawCycle; pos++) {
     const cx = colX[pos];
-    const isCur = pos === cycle;
+    const isCur = pos === drawCycle && cycle < N;
     const matAlpha = isCur ? clamp(ct / 0.08, 0, 1) : 1;
     const fwdS = 0.12;
 
-    // Vertical connections
-    glowLine(ctx, cx, embY + embSz, cx, lY[0] - lSz/2, COL.cyan, matAlpha * 0.18, 1.5);
+    // Vertical connections (dim base + directional pulse)
+    glowLine(ctx, cx, embY + embSz, cx, lY[0] - lSz/2, COL.cyan, matAlpha * 0.12, 1.5);
     for (let l = 0; l < L-1; l++)
-      glowLine(ctx, cx, lY[l] + lSz/2, cx, lY[l+1] - lSz/2, COL.cyan, matAlpha * 0.18, 1.5);
-    glowLine(ctx, cx, lY[L-1] + lSz/2, cx, predY - 10*s, COL.cyan, matAlpha * 0.18, 1.5);
+      glowLine(ctx, cx, lY[l] + lSz/2, cx, lY[l+1] - lSz/2, COL.cyan, matAlpha * 0.12, 1.5);
+    glowLine(ctx, cx, lY[L-1] + lSz/2, cx, predY - 10*s, COL.cyan, matAlpha * 0.12, 1.5);
+
+    if (isCur) {
+      const segDur = 0.05;
+      glowLineDir(ctx, cx, embY + embSz, cx, lY[0] - lSz/2, COL.cyan,
+        pop(ct, fwdS, 0.03, 0.10) * 0.5, 2.5, clamp((ct - fwdS) / segDur, 0, 1));
+      for (let l = 0; l < L - 1; l++) {
+        const segS = fwdS + (l + 1) * 0.07;
+        glowLineDir(ctx, cx, lY[l] + lSz/2, cx, lY[l+1] - lSz/2, COL.cyan,
+          pop(ct, segS, 0.03, 0.10) * 0.5, 2.5, clamp((ct - segS) / segDur, 0, 1));
+      }
+      const segSL = fwdS + L * 0.07;
+      glowLineDir(ctx, cx, lY[L-1] + lSz/2, cx, predY - 10*s, COL.cyan,
+        pop(ct, segSL, 0.03, 0.10) * 0.5, 2.5, clamp((ct - segSL) / segDur, 0, 1));
+    }
 
     // Residual nodes between layers
     const resPs = [
@@ -375,8 +419,10 @@ function drawSec2(ctx, W, H, t) {
       const animCy = lerp(predY, tokY, slideT);
       drawTokenPill(ctx, animCx, animCy, TOKENS[pos], fs, 1, pop(ct, 0), COL.cyan);
     } else {
-      const pg = (isCur && pos === 0) ? pop(ct, 0.02) : 0;
-      drawTokenPill(ctx, cx, tokY, TOKENS[pos], fs, matAlpha, isCur ? pop(ct, 0.02) : 0);
+      // All tokens glow briefly at each cycle start, not just the current one
+      const allGlow = cycle < N ? pop(ct, 0.01, 0.05, 0.20) : 0;
+      const tokGlow = isCur ? pop(ct, 0.02) : allGlow;
+      drawTokenPill(ctx, cx, tokY, TOKENS[pos], fs, matAlpha, tokGlow);
     }
 
     // Embedding nodes for ALL accumulated tokens (shows model processes all of them)
@@ -418,6 +464,21 @@ function drawSec2(ctx, W, H, t) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText('pos ' + pos, cx, predY + 20*s);
   }
+
+  // Epilogue: final predicted token flies up to become input
+  if (cycle >= N) {
+    const ect = clamp((t - N * CYCLE) / CYCLE, 0, 1);
+    const lastCx = colX[N - 1];
+    const newCx = lastCx + colSp;
+    const fs = Math.round(10 * s);
+    if (ect < 0.15) {
+      const slideT = easeOut(ect / 0.15);
+      drawTokenPill(ctx, lerp(lastCx, newCx, slideT), lerp(predY, tokY, slideT),
+        PREDS[N - 1], fs, 1, pop(ect, 0), COL.cyan);
+    } else {
+      drawTokenPill(ctx, newCx, tokY, PREDS[N - 1], fs, 1, pop(ect, 0.15, 0.05, 0.3));
+    }
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -434,7 +495,7 @@ function drawSec3(ctx, W, H, t) {
   const kvSz = Math.round(14 * s);
   const resSz = Math.round(8 * s);
   const kvOff = Math.round(40 * s);
-  const colSp = Math.round(175 * s);
+  const colSp = Math.round(Math.min(175, 900 / Math.max(N - 1, 1)) * s);
   const totalW = (N-1) * colSp;
   const leftPad = (W - totalW) / 2;
   const colX = Array.from({length: N}, (_, i) => leftPad + i * colSp);
@@ -444,18 +505,19 @@ function drawSec3(ctx, W, H, t) {
   const predY = Math.round(0.83 * H);
 
   const CYCLE = 2.4;
-  const cycle = Math.min(Math.floor(t / CYCLE), N - 1);
-  const ct = clamp((t - cycle * CYCLE) / CYCLE, 0, 1);
+  const cycle = Math.min(Math.floor(t / CYCLE), N);
+  const drawCycle = Math.min(cycle, N - 1);
+  const ct = cycle < N ? clamp((t - cycle * CYCLE) / CYCLE, 0, 1) : 1;
 
   // KV bus lines
   const busOff = Math.round(18 * s);
-  const busVisible = cycle > 0 || ct > 0.2;
+  const busVisible = drawCycle > 0 || ct > 0.2;
   if (busVisible) {
     const busAlpha = cycle === 0 ? clamp((ct - 0.2) / 0.15, 0, 0.08) : 0.08;
     for (let l = 0; l < L; l++) {
       const busY = lY[l] - busOff;
       const x1 = colX[0] - 15 * s;
-      const lastVisPos = Math.min(cycle, N - 1);
+      const lastVisPos = Math.min(drawCycle, N - 1);
       const x2 = colX[lastVisPos] + kvOff + kvSz/2 + 10 * s;
       glowLine(ctx, x1, busY, x2, busY, COL.amber, busAlpha, 1);
     }
@@ -469,16 +531,30 @@ function drawSec3(ctx, W, H, t) {
   //   Layer fires:             fwdS + l * stepTime + 0.04
   //   KV output:               fwdS + l * stepTime + 0.07
 
-  for (let pos = 0; pos <= cycle; pos++) {
+  for (let pos = 0; pos <= drawCycle; pos++) {
     const cx = colX[pos];
-    const isCur = pos === cycle;
+    const isCur = pos === drawCycle && cycle < N;
     const matA = isCur ? clamp(ct / 0.08, 0, 1) : 1;
 
-    // Vertical connections
-    glowLine(ctx, cx, tokY + 10*s, cx, lY[0] - lSz/2, COL.cyan, matA * 0.18, 1.5);
+    // Vertical connections (dim base + directional pulse)
+    glowLine(ctx, cx, tokY + 10*s, cx, lY[0] - lSz/2, COL.cyan, matA * 0.12, 1.5);
     for (let l = 0; l < L-1; l++)
-      glowLine(ctx, cx, lY[l] + lSz/2, cx, lY[l+1] - lSz/2, COL.cyan, matA * 0.18, 1.5);
-    glowLine(ctx, cx, lY[L-1] + lSz/2, cx, predY - 10*s, COL.cyan, matA * 0.18, 1.5);
+      glowLine(ctx, cx, lY[l] + lSz/2, cx, lY[l+1] - lSz/2, COL.cyan, matA * 0.12, 1.5);
+    glowLine(ctx, cx, lY[L-1] + lSz/2, cx, predY - 10*s, COL.cyan, matA * 0.12, 1.5);
+
+    if (isCur) {
+      const segDur = 0.05;
+      glowLineDir(ctx, cx, tokY + 10*s, cx, lY[0] - lSz/2, COL.cyan,
+        pop(ct, fwdS, 0.03, 0.10) * 0.5, 2.5, clamp((ct - fwdS) / segDur, 0, 1));
+      for (let l = 0; l < L - 1; l++) {
+        const segS = fwdS + (l + 1) * stepTime;
+        glowLineDir(ctx, cx, lY[l] + lSz/2, cx, lY[l+1] - lSz/2, COL.cyan,
+          pop(ct, segS, 0.03, 0.10) * 0.5, 2.5, clamp((ct - segS) / segDur, 0, 1));
+      }
+      const segSL = fwdS + L * stepTime;
+      glowLineDir(ctx, cx, lY[L-1] + lSz/2, cx, predY - 10*s, COL.cyan,
+        pop(ct, segSL, 0.03, 0.10) * 0.5, 2.5, clamp((ct - segSL) / segDur, 0, 1));
+    }
 
     // Residual nodes between layers
     const resPs = [
@@ -486,16 +562,24 @@ function drawSec3(ctx, W, H, t) {
       ...Array.from({length: L-1}, (_, l) => (lY[l] + lSz/2 + lY[l+1] - lSz/2) / 2),
       (lY[L-1] + lSz/2 + predY - 10*s) / 2,
     ];
-    for (let r = 0; r < resPositions_length(resPs); r++) {
+    for (let r = 0; r < resPs.length; r++) {
       const rAct = isCur ? fwdS + r * stepTime - 0.01 : -1;
       const rG = isCur ? pop(ct, rAct) : 0;
       drawActNode(ctx, cx, resPs[r], resSz, COL.cyan, matA * (0.5 + rG * 0.5), rG);
     }
 
-    // Latest token only
+    // Latest token — with fly-up animation from previous column's prediction
     const fs = Math.round(11 * s);
-    const tokGlow = isCur ? pop(ct, 0.02) : 0;
-    drawTokenPill(ctx, cx, tokY, TOKENS[pos], fs, matA, tokGlow);
+    if (isCur && pos > 0 && ct < 0.10) {
+      const slideT = easeOut(ct / 0.10);
+      const fromX = colX[pos - 1];
+      const animCx = lerp(fromX, cx, slideT);
+      const animCy = lerp(predY, tokY, slideT);
+      drawTokenPill(ctx, animCx, animCy, TOKENS[pos], fs, 1, pop(ct, 0), COL.cyan);
+    } else {
+      const tokGlow = isCur ? pop(ct, 0.02) : 0;
+      drawTokenPill(ctx, cx, tokY, TOKENS[pos], fs, matA, tokGlow);
+    }
 
     // KV supply rails from previous positions — glow BEFORE layer fires
     if (pos > 0) {
@@ -504,13 +588,24 @@ function drawSec3(ctx, W, H, t) {
         const kvReadT = fwdS + l * stepTime;
         for (let src = 0; src < pos; src++) {
           const srcKvX = colX[src] + kvOff;
-          const railA = isCur ? clamp((ct - kvReadT) / 0.08, 0, 1) * 0.3 : 0.15;
           const railGlow = isCur ? pop(ct, kvReadT, 0.06, 0.2) : 0;
-          glowLine(ctx, srcKvX, busY, cx, busY, COL.green, matA * (railA + railGlow * 0.15), 1.2);
+
+          // Source KV box glows green when being read
+          if (isCur && railGlow > 0) {
+            const kx = srcKvX - kvSz/2, ky = lY[l] - kvSz/2;
+            glowRect(ctx, kx, ky, kvSz, kvSz, COL.green, railGlow * 0.7);
+          }
+
+          // Directional rail: travels from source KV toward current station
+          const railProgress = isCur ? clamp((ct - kvReadT) / 0.10, 0, 1) : 1;
+          const railA = isCur ? clamp((ct - kvReadT) / 0.08, 0, 1) * 0.3 : 0.15;
+          glowLineDir(ctx, srcKvX, busY, cx, busY, COL.green,
+            matA * (railA + railGlow * 0.15), 1.2, railProgress);
         }
-        // Read tick from bus down to station
+        // Directional read tick from bus down to station
+        const tickProgress = isCur ? clamp((ct - kvReadT - 0.06) / 0.04, 0, 1) : 1;
         const tickA = isCur ? clamp((ct - kvReadT) / 0.08, 0, 1) * 0.25 : 0.12;
-        glowLine(ctx, cx, busY, cx, lY[l] - lSz/2, COL.green, matA * tickA, 1);
+        glowLineDir(ctx, cx, busY, cx, lY[l] - lSz/2, COL.green, matA * tickA, 1, tickProgress);
       }
     }
 
@@ -520,16 +615,26 @@ function drawSec3(ctx, W, H, t) {
       drawLayerNode(ctx, cx, lY[l], lSz, 'L'+(l+1), matA, isCur ? pop(ct, lAct) : 0, COL.cyan);
     }
 
-    // KV output nodes — appear AFTER layer fires
+    // KV output nodes — appear AFTER layer fires, directional write
     for (let l = 0; l < L; l++) {
       const kvAct = isCur ? fwdS + l * stepTime + 0.07 : -1;
       const kvG = isCur ? pop(ct, kvAct) : 0;
       const kvCx = cx + kvOff;
       const busY = lY[l] - busOff;
 
-      glowLine(ctx, cx + lSz/2 + 1, lY[l], kvCx - kvSz/2 - 1, lY[l], COL.amber, matA * 0.25, 1);
-      glowLine(ctx, kvCx, lY[l] - kvSz/2, kvCx, busY, COL.amber, matA * 0.2, 1);
+      // Directional: layer → KV box (rightward)
+      const kvWriteP = isCur ? clamp((ct - (fwdS + l * stepTime + 0.05)) / 0.04, 0, 1) : 1;
+      glowLineDir(ctx, cx + lSz/2 + 1, lY[l], kvCx - kvSz/2 - 1, lY[l],
+        COL.amber, matA * (0.2 + kvG * 0.15), 1, kvWriteP);
+      // Directional: KV box → bus (upward)
+      const kvBusP = isCur ? clamp((ct - (fwdS + l * stepTime + 0.08)) / 0.03, 0, 1) : 1;
+      glowLineDir(ctx, kvCx, lY[l] - kvSz/2, kvCx, busY,
+        COL.amber, matA * (0.15 + kvG * 0.1), 1, kvBusP);
       drawActNode(ctx, kvCx, lY[l], kvSz, COL.amber, matA, kvG);
+      ctx.fillStyle = rgba(COL.amber, matA * (0.35 + kvG * 0.3));
+      ctx.font = `600 ${Math.round(kvSz * 0.5)}px 'IBM Plex Mono', monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('KV', kvCx, lY[l] + 0.5);
     }
 
     // Prediction
@@ -545,6 +650,21 @@ function drawSec3(ctx, W, H, t) {
     ctx.font = `${Math.round(9*s)}px 'IBM Plex Mono', monospace`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText('pos ' + pos, cx, predY + 20*s);
+  }
+
+  // Epilogue: final predicted token flies up to become input
+  if (cycle >= N) {
+    const ect = clamp((t - N * CYCLE) / CYCLE, 0, 1);
+    const lastCx = colX[N - 1];
+    const newCx = lastCx + colSp;
+    const fs = Math.round(11 * s);
+    if (ect < 0.15) {
+      const slideT = easeOut(ect / 0.15);
+      drawTokenPill(ctx, lerp(lastCx, newCx, slideT), lerp(predY, tokY, slideT),
+        PREDS[N - 1], fs, 1, pop(ect, 0), COL.cyan);
+    } else {
+      drawTokenPill(ctx, newCx, tokY, PREDS[N - 1], fs, 1, pop(ect, 0.15, 0.05, 0.3));
+    }
   }
 }
 
@@ -562,7 +682,7 @@ function drawSec4(ctx, W, H, t) {
   const kvSz = Math.round(14 * s);
   const resSz = Math.round(8 * s);
   const kvOff = Math.round(40 * s);
-  const colSp = Math.round(175 * s);
+  const colSp = Math.round(Math.min(175, 900 / Math.max(N - 1, 1)) * s);
   const totalW = (N-1) * colSp;
   const leftPad = (W - totalW) / 2;
   const colX = Array.from({length: N}, (_, i) => leftPad + i * colSp);
@@ -657,7 +777,7 @@ function drawSec4(ctx, W, H, t) {
 
     ctx.fillStyle = rgba(COL.green, la * 0.9);
     ctx.textAlign = 'left';
-    ctx.fillText('"mat"', lcx - 24*s, predY - 14);
+    ctx.fillText('"' + FULL_CHAIN[FULL_CHAIN.length - 1] + '"', lcx - 24*s, predY - 14);
 
     // Loss label with glow
     ctx.fillStyle = rgba(COL.red, la * (0.7 + lossGlow * 0.3));
@@ -702,10 +822,16 @@ function drawSec4(ctx, W, H, t) {
       const totalGlow = Math.max(glow, steadyGlow);
       drawLayerNode(ctx, cx, lY[l], lSz, 'L'+(l+1), 0.5 + ga * 0.5, totalGlow, COL.magenta);
 
-      // Gradient on vertical connection (upward)
+      // Gradient on vertical connection (directional: upward from this layer)
       if (l > 0) {
         const upA = ga * 0.35;
-        glowLine(ctx, cx, lY[l] - lSz/2, cx, lY[l-1] + lSz/2, COL.magenta, upA, 2);
+        const upProgress = clamp((t - activationT) / 0.25, 0, 1);
+        glowLineDir(ctx, cx, lY[l] - lSz/2, cx, lY[l-1] + lSz/2, COL.magenta, upA, 2, upProgress);
+      } else {
+        // L1 → embedding: gradient continues upward to token embedding
+        const upA = ga * 0.35;
+        const upProgress = clamp((t - activationT) / 0.25, 0, 1);
+        glowLineDir(ctx, cx, lY[0] - lSz/2, cx, tokY + 10*s, COL.magenta, upA, 2, upProgress);
       }
 
       // Gradient on KV (travels progressively leftward)
@@ -738,6 +864,8 @@ function drawSec4(ctx, W, H, t) {
       (lY[L-1] + lSz/2 + predY - 10*s) / 2,
     ];
     for (let r = 0; r < resPs.length; r++) {
+      // Unembedding residual only gets gradient at loss source position
+      if (r === L && pos !== N - 1) continue;
       const layerFromBottom = L - 1 - Math.min(r, L - 1);
       const diag = posFromRight + layerFromBottom;
       const activationT = gradStart + diag * waveSpeed;
@@ -760,8 +888,11 @@ function drawSec4(ctx, W, H, t) {
 // ── Init ──
 
 document.addEventListener('DOMContentLoaded', () => {
-  createSection(document.getElementById('sec1'), drawSec1, 12);
-  createSection(document.getElementById('sec2'), drawSec2, 10);
-  createSection(document.getElementById('sec3'), drawSec3, 12);
-  createSection(document.getElementById('sec4'), drawSec4, 8);
+  const SEC1_CYCLE = 2.0, SEC2_CYCLE = 2.0, SEC3_CYCLE = 2.4;
+  const sec4GradStart = 0.8, sec4WaveSpeed = 0.55;
+  createSection(document.getElementById('sec1'), drawSec1, (N + 1) * SEC1_CYCLE);
+  createSection(document.getElementById('sec2'), drawSec2, (N + 1) * SEC2_CYCLE);
+  createSection(document.getElementById('sec3'), drawSec3, (N + 1) * SEC3_CYCLE);
+  createSection(document.getElementById('sec4'), drawSec4,
+    sec4GradStart + (N + L - 2) * sec4WaveSpeed + 2.0);
 });
