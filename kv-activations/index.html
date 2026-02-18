@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KV Activations in Transformers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #000;
+            color: #94a3b8;
+            font-family: 'IBM Plex Mono', monospace;
+            min-height: 100vh;
+        }
+
+        #app {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .viz-section { position: relative; }
+
+        .canvas-wrap {
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .canvas-wrap canvas { display: block; }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .controls button {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 500;
+            padding: 5px 14px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 3px;
+            background: rgba(0, 20, 40, 0.6);
+            color: #00d4ff;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .controls button:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="viz-section" id="sec1">
+            <div class="canvas-wrap"><canvas></canvas></div>
+            <div class="controls">
+                <button class="btn-play">play</button>
+                <button class="btn-reset">reset</button>
+            </div>
+        </div>
+        <div class="viz-section" id="sec2">
+            <div class="canvas-wrap"><canvas></canvas></div>
+            <div class="controls">
+                <button class="btn-play">play</button>
+                <button class="btn-reset">reset</button>
+            </div>
+        </div>
+        <div class="viz-section" id="sec3">
+            <div class="canvas-wrap"><canvas></canvas></div>
+            <div class="controls">
+                <button class="btn-play">play</button>
+                <button class="btn-reset">reset</button>
+            </div>
+        </div>
+        <div class="viz-section" id="sec4">
+            <div class="canvas-wrap"><canvas></canvas></div>
+            <div class="controls">
+                <button class="btn-play">play</button>
+                <button class="btn-reset">reset</button>
+            </div>
+        </div>
+    </div>
+    <script src="factory.js"></script>
+</body>
+</html>
