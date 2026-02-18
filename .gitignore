@@ -1,0 +1,6 @@
+# Dev screenshots
+*.png
+generated/
+
+# Playwright MCP artifacts
+.playwright-mcp/
