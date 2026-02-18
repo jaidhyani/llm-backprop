@@ -4,7 +4,9 @@
 // ── Configurable token sequence ──
 // Change this array to visualize any autoregressive chain.
 // SEQUENCE[0] is the prompt; each subsequent token is what the model predicts.
-const SEQUENCE = ['The', 'cat', 'sat', 'on', 'the', 'mat'];
+//const SEQUENCE = ['The', 'cat', 'sat', 'on', 'the', 'mat'];
+
+const SEQUENCE = "LLMs are just next token predictors.".split(" ");
 
 const FULL_CHAIN = SEQUENCE;
 const TOKENS = SEQUENCE.slice(0, -1);
