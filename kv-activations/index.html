@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KV Activations in Transformers</title>
+    <title>LLMs are not Next-Token Predictors</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -65,10 +65,44 @@
             background: rgba(0, 212, 255, 0.1);
             border-color: rgba(0, 212, 255, 0.4);
         }
+
+        .prose {
+            max-width: 680px;
+            line-height: 1.7;
+            font-size: 0.92rem;
+            font-weight: 400;
+            color: #c8d3e0;
+        }
+
+        .prose h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .prose h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .prose p { margin-bottom: 14px; }
+        .prose p:last-child { margin-bottom: 0; }
+
+        .prose em { color: #00d4ff; font-style: normal; }
+        .prose strong { color: #e2e8f0; font-weight: 600; }
     </style>
 </head>
 <body>
     <div id="app">
+        <div class="prose" id="intro">
+            <!-- Page intro — your prose goes here -->
+        </div>
+
         <div class="viz-section" id="sec1">
             <div class="canvas-wrap"><canvas></canvas></div>
             <div class="controls">
@@ -76,6 +110,10 @@
                 <button class="btn-reset">reset</button>
             </div>
         </div>
+        <div class="prose" id="prose-2">
+            <!-- Between sections 1 and 2 -->
+        </div>
+
         <div class="viz-section" id="sec2">
             <div class="canvas-wrap"><canvas></canvas></div>
             <div class="controls">
@@ -83,6 +121,11 @@
                 <button class="btn-reset">reset</button>
             </div>
         </div>
+
+        <div class="prose" id="prose-3">
+            <!-- Between sections 2 and 3 -->
+        </div>
+
         <div class="viz-section" id="sec3">
             <div class="canvas-wrap"><canvas></canvas></div>
             <div class="controls">
@@ -90,12 +133,20 @@
                 <button class="btn-reset">reset</button>
             </div>
         </div>
+        <div class="prose" id="prose-4">
+            <!-- Between sections 3 and 4 -->
+        </div>
+
         <div class="viz-section" id="sec4">
             <div class="canvas-wrap"><canvas></canvas></div>
             <div class="controls">
                 <button class="btn-play">play</button>
                 <button class="btn-reset">reset</button>
             </div>
+        </div>
+
+        <div class="prose" id="outro">
+            <!-- Closing prose -->
         </div>
     </div>
     <script src="factory.js"></script>
