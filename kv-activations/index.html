@@ -99,6 +99,7 @@
 </head>
 <body>
     <div id="app">
+        <button id="theme-toggle" style="align-self:flex-end;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;font-weight:500;padding:5px 14px;border:1px solid rgba(0,212,255,0.2);border-radius:3px;background:rgba(0,20,40,0.6);color:#00d4ff;cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;">light</button>
         <div class="prose" id="intro">
 		Disclaimer: I make some simplifications here for pedagogical purposes. I don't think any
 		of these simplifications detract from the point or inhibit understanding of the core
@@ -231,9 +232,9 @@
         </div>
 
         <div class="prose" id="between-something">
-	A straightforward conseuqnce of kv enabling information to flow between forward passes is that
-	every training signal effectively travels back in time and optimizes every forward pass to
-	predict not just the next token, but *everything* that comes after.
+		A straightforward conseuqnce of kv enabling information to flow between forward passes is that
+		every training signal effectively travels back in time and optimizes every forward pass to
+		predict not just the next token, but *everything* that comes after.
         </div>
 
 
@@ -245,7 +246,15 @@
             </div>
         </div>
 
+
+
         <div class="prose" id="between-something-2">
+		And that falsifies the second "just a next-token-predictor" criteria: every calculation in
+		every layer at every position back to the very first token is a direct, differntiable ancestor 
+		of every prediction that comes after it. And because the information content of kv activations
+		dwarfs that of token prediction, it would be more accurate to say that most of what LLMs do is
+		in anticipation of all the information they will ever process in the future, incidentally
+		predicting the next token in the process.
 
         </div>
     </div>
