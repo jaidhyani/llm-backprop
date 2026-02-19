@@ -1,0 +1,241 @@
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: #0a0a0f;
+    color: #c8c8cc;
+    font-family: 'Newsreader', Georgia, serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 80px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ── Theme toggle ── */
+
+#theme-toggle {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 400;
+    padding: 6px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.4s ease;
+    user-select: none;
+    text-transform: lowercase;
+    letter-spacing: 0.08em;
+    z-index: 100;
+}
+
+#theme-toggle:hover {
+    color: rgba(255, 255, 255, 0.6);
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ── Visualization sections ── */
+
+.viz-section {
+    position: relative;
+    margin: 48px -60px;
+}
+
+@media (max-width: 900px) {
+    .viz-section { margin-left: 0; margin-right: 0; }
+}
+
+.canvas-wrap {
+    border: none;
+    border-radius: 8px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #08080e, #0c0c14);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 60px rgba(0, 100, 140, 0.06),
+        0 4px 30px rgba(0, 0, 0, 0.4);
+}
+
+.canvas-wrap canvas { display: block; }
+
+/* ── Controls: nearly invisible, fade in on hover ── */
+
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 12px;
+    opacity: 0.15;
+    transition: opacity 0.5s ease;
+}
+
+.viz-section:hover .controls {
+    opacity: 0.7;
+}
+
+.controls button {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 400;
+    padding: 5px 16px;
+    border: none;
+    border-radius: 3px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    text-transform: lowercase;
+    letter-spacing: 0.1em;
+}
+
+.controls button:hover {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── Prose ── */
+
+.prose {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.85;
+    font-size: 1.12rem;
+    font-weight: 400;
+    color: #c8c8cc;
+    padding: 40px 0;
+    position: relative;
+}
+
+.prose + .prose {
+    padding-top: 0;
+}
+
+.prose + .viz-section {
+    margin-top: 8px;
+}
+
+.viz-section + .prose {
+    padding-top: 48px;
+}
+
+/* Thin rule between major prose sections */
+.viz-section + .prose::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 0 auto 48px;
+}
+
+.prose h1 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 2.4rem;
+    font-weight: 500;
+    color: #e8e8ea;
+    margin-bottom: 24px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+}
+
+.prose h2 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: #dcdce0;
+    margin-bottom: 12px;
+    margin-top: 32px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+.prose p { margin-bottom: 20px; }
+.prose p:last-child { margin-bottom: 0; }
+
+.prose em {
+    color: #b8a070;
+    font-style: italic;
+}
+
+.prose strong {
+    color: #e2e2e6;
+    font-weight: 600;
+}
+
+/* Drop cap on the first prose block */
+#intro::first-letter {
+    font-family: 'Newsreader', Georgia, serif;
+    float: left;
+    font-size: 4.2em;
+    line-height: 0.8;
+    padding-right: 12px;
+    padding-top: 6px;
+    color: #e2e2e6;
+    font-weight: 500;
+}
+
+/* ── Aside / callout ── */
+
+.prose aside {
+    margin: 32px 0;
+    padding: 24px 28px;
+    border-left: 2px solid rgba(184, 160, 112, 0.25);
+    background: rgba(255, 255, 255, 0.015);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: #aaaaae;
+}
+
+/* ── Links ── */
+
+.prose a {
+    color: #b8a070;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(184, 160, 112, 0.3);
+    transition: border-color 0.3s ease;
+}
+
+.prose a:hover {
+    border-bottom-color: rgba(184, 160, 112, 0.7);
+}
+
+/* ── Selection ── */
+
+::selection {
+    background: rgba(184, 160, 112, 0.25);
+    color: #e8e8ea;
+}
+
+/* ── Scrollbar ── */
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.14);
+}

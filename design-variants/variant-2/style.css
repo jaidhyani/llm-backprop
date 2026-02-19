@@ -1,0 +1,240 @@
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── Accent bar — thin colored line at top of page ── */
+
+.accent-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0077aa 0%, #00a4d6 40%, #d4a030 100%);
+    z-index: 100;
+}
+
+/* ── Body — faint warm ruled-paper texture ── */
+
+body {
+    background: #faf8f4;
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 27px,
+            rgba(180, 170, 155, 0.07) 27px,
+            rgba(180, 170, 155, 0.07) 28px
+        );
+    color: #3a3632;
+    font-family: 'Source Serif 4', 'Georgia', serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Wide container — 960px, generous breathing room ── */
+
+#app {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 80px 32px 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 88px;
+}
+
+/* ── Article header ── */
+
+.article-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* ── Theme toggle — sans-serif UI chrome ── */
+
+#theme-toggle {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 5px 14px;
+    border: 1px solid #d4cdc4;
+    border-radius: 3px;
+    background: transparent;
+    color: #8a8279;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+#theme-toggle:hover {
+    color: #5a534b;
+    border-color: #9a9389;
+}
+
+/* ── Prose — centered 65ch within wider container ── */
+
+.prose {
+    max-width: 65ch;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.85;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #3a3632;
+    font-optical-sizing: auto;
+    position: relative;
+}
+
+.prose h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1714;
+    margin-bottom: 16px;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+}
+
+.prose h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #1a1714;
+    margin-bottom: 12px;
+    line-height: 1.35;
+}
+
+.prose p { margin-bottom: 18px; }
+.prose p:last-child { margin-bottom: 0; }
+
+.prose em {
+    color: #8b4513;
+    font-style: italic;
+}
+
+.prose strong {
+    color: #1a1714;
+    font-weight: 600;
+}
+
+/* ── Margin notes — positioned in the right margin ── */
+
+.has-margin-notes {
+    max-width: 65ch;
+}
+
+.margin-note {
+    position: absolute;
+    right: -260px;
+    width: 220px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: #6a635a;
+    border-left: none;
+    padding: 0;
+    margin: 0;
+}
+
+.margin-note-label {
+    display: block;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9a9389;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e4ddd4;
+}
+
+/* Fallback: inline aside when viewport too narrow for margin */
+@media (max-width: 1080px) {
+    .margin-note {
+        position: relative;
+        right: auto;
+        width: auto;
+        max-width: 65ch;
+        border-left: 2px solid #d4cdc4;
+        padding: 16px 0 16px 24px;
+        margin: 28px 0;
+        font-size: 0.92rem;
+        color: #5a534b;
+        line-height: 1.75;
+    }
+}
+
+/* Non-margin asides — inline with border */
+.prose aside:not(.margin-note) {
+    border-left: 2px solid #d4cdc4;
+    padding: 16px 0 16px 24px;
+    margin: 28px 0;
+    font-size: 0.95rem;
+    color: #5a534b;
+    line-height: 1.75;
+}
+
+/* ── Visualization sections — full container width ── */
+
+.viz-section {
+    position: relative;
+}
+
+.canvas-wrap {
+    border: none;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #0a0a0f;
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.06),
+        0 6px 24px rgba(0, 0, 0, 0.05);
+}
+
+.canvas-wrap canvas { display: block; }
+
+/* ── Viz footer — figure label + controls in a row ── */
+
+.viz-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding: 0 2px;
+}
+
+.figure-label {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #8a8279;
+    letter-spacing: 0.01em;
+}
+
+/* ── Controls — sans-serif UI chrome ── */
+
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.controls button {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 4px 14px;
+    border: 1px solid #d4cdc4;
+    border-radius: 3px;
+    background: transparent;
+    color: #8a8279;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    user-select: none;
+}
+
+.controls button:hover {
+    color: #5a534b;
+    border-color: #9a9389;
+    background: rgba(0, 0, 0, 0.02);
+}

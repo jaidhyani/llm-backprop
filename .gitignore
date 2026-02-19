@@ -4,3 +4,7 @@ generated/
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+# Editor swap files
+*.swp
+*.swo
