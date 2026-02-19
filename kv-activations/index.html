@@ -6,23 +6,26 @@
     <title>LLMs are not Next-Token Predictors</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app">
         <button id="theme-toggle">light</button>
-        <div class="prose" id="intro">
-		Disclaimer: I make some simplifications here for pedagogical purposes. I don't think any
+
+        <div class="hero">
+            <h1>LLMs are not Next-Token Predictors</h1>
+            <div class="byline">An interactive essay</div>
+        </div>
+
+        <div class="prose has-dropcap" id="intro">
+		<p>There is a misconception about LLMs so widespread that even the LLMs themselves believe it.
+		"LLMs are just next-token predictors."</p>
+
+		<p>I make some simplifications here for pedagogical purposes. I don't think any
 		of these simplifications detract from the point or inhibit understanding of the core
 		concepts we're talking about, but if you disagree please let me know and, ideally,
-		tell me what would make this interactive essay explainer thing better.
-
-		There is a misconception about LLMs so widespread that even the LLMs themselves believe it.
-
-		"LLMs are just next-token predictors".
-
-		(claude pullquote here)
+		tell me what would make this interactive essay better.</p>
 	</div>
 
         <div class="viz-section" id="sec1">
@@ -35,26 +38,32 @@
 
 	<div class="prose" id="between-zero-and-one">
 
-		I want to be very clear here: I'm not talking about emergent capabilities downstream of 
+		<p>I want to be very clear here: I'm not talking about emergent capabilities downstream of
 		next-token-prediction. And I'm not talking about the long-rollout reinforcement learning
-		post-training.
+		post-training.</p>
 
-		I'm saying that plain old regular LLMs, with no special post-training, trained only on
+		<p>I'm saying that plain old regular LLMs, with no special post-training, trained only on
 		the "next-token prediction task", are thinking* ahead from the very start. I'm saying that
 		LLMs have a whole other output channel that's much more information dense than the token
 		stream we look at. And I'm saying that this is a straightforward, mechanical consequence
-		of the way LLMs are trained and how they perform inference. 
+		of the way LLMs are trained and how they perform inference.</p>
+	</div>
 
-		I am not making an argument.
-		I'm stating a mathematical fact.
-		LLMs are not (just) next-token predictors, and this fact has practical consequences.
+	<div class="pull-quote">
+		<p>I am not making an argument. I'm stating a mathematical fact.</p>
+	</div>
+
+	<div class="prose" id="between-zero-and-one-cont">
+		<p>LLMs are not just next-token predictors, and this fact has practical consequences.
 		In particular, the intuitions that flow from the misconception that they're just next-token
 		predictors are distorting the discourse about a technology that's rapidly
-		reshaping the world around us.
+		reshaping the world around us.</p>
 
-		To understand why LLMs aren't just next token predictors, we'll start with a toy model
-		of what they might look like if they were just next-token predictors.
+		<p>To understand why LLMs aren't just next token predictors, we'll start with a toy model
+		of what they might look like if they were just next-token predictors.</p>
 	</div>
+
+	<hr class="section-break">
 
         <div class="viz-section" id="sec2">
             <div class="canvas-wrap"><canvas></canvas></div>
@@ -67,28 +76,28 @@
 
         <div class="prose" id="between-one-and-two">
 
-		Here, the model's inputs are just the tokens it has seen so far. It converts those tokens
+		<p>Here, the model's inputs are just the tokens it has seen so far. It converts those tokens
 		into tensors, does a few layers of math, and outputs a probability distribution over
-		potential next tokens. This is what most people think LLMs are doing - and it's wrong.
+		potential next tokens. This is what most people think LLMs are doing — and it's wrong.</p>
 
-		I want to point out two particular features of this model that allow us to call it 
-		"just" a next token predictor.
+		<p>I want to point out two particular features of this model that allow us to call it
+		"just" a next token predictor.</p>
 
-		1. The only output of the model is the next token. No other information or internal
-		state persists between subsequent predictions.
+		<p>1. The only output of the model is the next token. No other information or internal
+		state persists between subsequent predictions.</p>
 
-		2. When we train LLMs, we care about which calculations we could have changed to
+		<p>2. When we train LLMs, we care about which calculations we could have changed to
 		get a better answer. Here, the only calculations we care about are in the forward pass
-		that generates the final prediction, because We're treating each token prediction like 
+		that generates the final prediction, because we're treating each token prediction like
 		a totally separate instance. We would never change anything about the first
-		forward pass to get a better answer on the third forward pass.
+		forward pass to get a better answer on the third forward pass.</p>
 
-		So - because this model has no persistent internal state and each forward pass only gets
-		training signal from predicting the subsequent token, this is just a next-token predictor.
+		<p>So — because this model has no persistent internal state and each forward pass only gets
+		training signal from predicting the subsequent token, this is just a next-token predictor.</p>
 
-		But this is not actually how real LLMs work.
+		<p>But this is not actually how real LLMs work.</p>
 
-		Real LLMs work more like this:
+		<p>Real LLMs work more like this:</p>
 	</div>
 
         <div class="viz-section" id="sec3">
@@ -100,25 +109,28 @@
         </div>
 
 
-	<div class="prose" id="between 2 and 3">
+	<div class="prose" id="between-two-and-three">
 
-		Everyone forgets about the kv activations, but they're basically the channel
+		<p>Everyone forgets about the kv activations, but they're basically the channel
 		through which information between forward passes flows. When they said "attention is
-		all you need", kv activations were the thing they were paying attention to.
+		all you need", kv activations were the thing they were paying attention to.</p>
 
-		And they falsify the first "just a next-token predictor" criteria: kv activations are 
-		persistent internal states and a critical component of every subsequent forward pass. 
-		In fact, kv activations  provide many more bits of information to every forward pass 
-		than the input token itself does. It would not be entirely unreasonable to say that kv
-		activations are actually the main output of the model, with token prediction a minor
-		afterthought provided so that the model has some external ground truth to train against.
+		<p>And they falsify the first "just a next-token predictor" criteria: kv activations are
+		persistent internal states and a critical component of every subsequent forward pass.
+		In fact, kv activations provide many more bits of information to every forward pass
+		than the input token itself does.</p>
+	</div>
 
+	<div class="pull-quote">
+		<p>It would not be entirely unreasonable to say that kv activations are actually
+		the main output of the model, with token prediction a minor afterthought.</p>
+	</div>
+
+	<div class="prose" id="between-two-and-three-aside">
 		<aside>
-		Brief aside on kv activations and how exactly they work in LLMs
-
 		KV activations are at the heart of the transformer architecture that launched the LLM
 		revolution. KV activations are the complex state that persists and accumulates across
-		forward passes. KV activations carry many many more bits of information into subsequent 
+		forward passes. KV activations carry many many more bits of information into subsequent
 		forward passes then the tokens themselves do. You could plausibly call kv activations
 		the primary output of each forward pass before it also spits out a token prediction
 		at the end.
@@ -134,19 +146,20 @@
 		forward pass, and values (V) that can inform future inference.
 
 		The LLM compares the current query (Q) to every previous key (K) at the same layer
-		and weighs them according to similarity - we call that weight 'attention'. Then it takes
-		the attention-weighted average of all the valuesand feeds that into a neural network (MLP),
+		and weighs them according to similarity — we call that weight 'attention'. Then it takes
+		the attention-weighted average of all the values and feeds that into a neural network (MLP),
 		which then produces some abstract information encoded as numbers.
 		This information gets added to the data accumulated from previous layers ("residual")
 		and fed into the next layer.
 		</aside>
-
         </div>
 
+	<hr class="section-break">
+
         <div class="prose" id="between-something">
-		A straightforward conseuqnce of kv enabling information to flow between forward passes is that
+		<p>A straightforward consequence of kv enabling information to flow between forward passes is that
 		every training signal effectively travels back in time and optimizes every forward pass to
-		predict not just the next token, but *everything* that comes after.
+		predict not just the next token, but <em>everything</em> that comes after.</p>
         </div>
 
 
@@ -161,12 +174,12 @@
 
 
         <div class="prose" id="between-something-2">
-		And that falsifies the second "just a next-token-predictor" criteria: every calculation in
-		every layer at every position back to the very first token is a direct, differntiable ancestor 
+		<p>And that falsifies the second "just a next-token-predictor" criteria: every calculation in
+		every layer at every position back to the very first token is a direct, differentiable ancestor
 		of every prediction that comes after it. And because the information content of kv activations
 		dwarfs that of token prediction, it would be more accurate to say that most of what LLMs do is
 		in anticipation of all the information they will ever process in the future, incidentally
-		predicting the next token in the process.
+		predicting the next token in the process.</p>
 
         </div>
     </div>
