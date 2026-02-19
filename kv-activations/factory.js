@@ -217,6 +217,7 @@ function createSection(sectionEl, drawFn, duration) {
   const ctx = canvas.getContext('2d');
   const playBtn = sectionEl.querySelector('.btn-play');
   const resetBtn = sectionEl.querySelector('.btn-reset');
+  const playOverlay = sectionEl.querySelector('.btn-play-overlay');
   let W = 0, H = 0, t = 0, playing = false, playStartWall = 0, tAtPlay = 0;
 
   // Tooltip
@@ -295,16 +296,31 @@ function createSection(sectionEl, drawFn, duration) {
     requestAnimationFrame(frame);
   }
 
-  playBtn.onclick = () => {
+  function startPlayback() {
     if (t >= duration) t = 0;
-    playing = !playing;
-    if (playing) { playStartWall = performance.now(); tAtPlay = t; }
-    playBtn.textContent = playing ? 'pause' : 'play';
+    playing = true;
+    playStartWall = performance.now();
+    tAtPlay = t;
+    playBtn.textContent = 'pause';
+    if (playOverlay) playOverlay.classList.add('playing');
+  }
+
+  playBtn.onclick = () => {
+    if (playing) {
+      playing = false;
+      playBtn.textContent = 'play';
+    } else {
+      startPlayback();
+    }
   };
   resetBtn.onclick = () => {
     t = 0; playing = false;
     playBtn.textContent = 'play';
+    if (playOverlay) playOverlay.classList.remove('playing');
   };
+  if (playOverlay) {
+    playOverlay.onclick = () => startPlayback();
+  }
 
   resize();
   window.addEventListener('resize', resize);
